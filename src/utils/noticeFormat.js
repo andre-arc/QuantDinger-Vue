@@ -1,6 +1,7 @@
 /**
  * Render in-app notifications from payload.display (locale-aware) with legacy fallbacks.
  */
+import DOMPurify from 'dompurify'
 
 function stripHtml (input) {
   if (!input) return ''
@@ -221,14 +222,14 @@ export function noticePreview (item, t, maxLen = 80) {
 export function noticeMessageHtml (item, t) {
   const raw = (item && item.message) || ''
   if (raw.includes('<div class="qd-report">') || raw.includes('<style>')) {
-    return raw
+    return DOMPurify.sanitize(raw)
   }
   const rendered = renderFromDisplay(item, t, { html: true })
   if (rendered && rendered.message) {
-    return rendered.message
+    return DOMPurify.sanitize(rendered.message)
   }
   if (/<[a-z][\s\S]*>/i.test(raw)) {
-    return raw
+    return DOMPurify.sanitize(raw)
   }
   return escapeHtml(stripHtml(raw)).replace(/\n/g, '<br>')
 }

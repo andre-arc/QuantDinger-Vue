@@ -26,6 +26,11 @@
               {{ ex.name }}
             </a-select-option>
           </a-select-opt-group>
+          <a-select-opt-group label="DEX / On-chain">
+            <a-select-option value="lighter">
+              Lighter DEX (Perpetuals)
+            </a-select-option>
+          </a-select-opt-group>
           <a-select-opt-group :label="$t('profile.exchange.typeAlpaca')">
             <a-select-option value="alpaca">
               Alpaca (US Stock + Crypto)
@@ -119,6 +124,44 @@
             placeholder="Passphrase"
             autocomplete="new-password"
           />
+        </a-form-item>
+      </template>
+
+      <template v-if="addExchangeType === 'lighter'">
+        <a-alert
+          type="info"
+          showIcon
+          style="margin-bottom: 16px"
+          message="Lighter DEX — EVM Wallet Authentication"
+          description="Lighter is a zk-rollup on-chain order book. Authentication uses your EVM wallet private key (ECDSA), not an API key."
+        />
+        <a-form-item label="Wallet Private Key">
+          <a-input-password
+            v-decorator="['private_key', { rules: [{ required: true, message: 'Wallet private key is required' }] }]"
+            placeholder="0x... (64-char hex or 0x-prefixed)"
+            autocomplete="new-password"
+          />
+          <div class="field-hint">
+            <a-icon type="info-circle" />
+            <span>Your EVM wallet private key. Never share this with anyone.</span>
+          </div>
+        </a-form-item>
+        <a-form-item label="Account Index (optional)">
+          <a-input-number
+            v-decorator="['account_index', { initialValue: 1 }]"
+            :min="1"
+            :max="254"
+            style="width: 100%"
+          />
+          <div class="field-hint">
+            <a-icon type="info-circle" />
+            <span>Lighter sub-key index. Leave at 1 for the primary account; use 2–254 for API sub-keys.</span>
+          </div>
+        </a-form-item>
+        <a-form-item label="Use Testnet">
+          <a-checkbox v-decorator="['testnet', { valuePropName: 'checked', initialValue: false }]">
+            Connect to Lighter testnet (testnet.zklighter.elliot.ai)
+          </a-checkbox>
         </a-form-item>
       </template>
 
@@ -344,6 +387,7 @@ export default {
         bitfinex: 'Bitfinex',
         deepcoin: 'Deepcoin',
         htx: 'HTX',
+        lighter: 'Lighter DEX',
         ibkr: 'IBKR',
         mt5: 'MetaTrader 5',
         alpaca: 'Alpaca'
@@ -357,6 +401,8 @@ export default {
       if (this.addExchangeType === 'crypto') {
         f.push('api_key', 'secret_key')
         if (this.addExchangeNeedsPassphrase) f.push('passphrase')
+      } else if (this.addExchangeType === 'lighter') {
+        f.push('private_key', 'account_index', 'testnet')
       } else if (this.addExchangeType === 'alpaca') {
         f.push('api_key', 'secret_key', 'base_url')
       } else if (this.addExchangeType === 'ibkr') {
@@ -371,6 +417,9 @@ export default {
         const f = ['exchange_id', 'api_key', 'secret_key']
         if (this.addExchangeNeedsPassphrase) f.push('passphrase')
         return f
+      }
+      if (this.addExchangeType === 'lighter') {
+        return ['exchange_id', 'private_key', 'account_index', 'testnet']
       }
       if (this.addExchangeType === 'alpaca') {
         return ['exchange_id', 'api_key', 'secret_key', 'base_url']
@@ -390,6 +439,11 @@ export default {
       }
       if (p.exchange_id === 'mt5' && p.mt5_login != null && p.mt5_login !== '') {
         p.mt5_login = String(p.mt5_login)
+      }
+      if (p.exchange_id === 'lighter') {
+        if (typeof p.private_key === 'string') p.private_key = p.private_key.trim()
+        if (p.account_index != null) p.account_index = Number(p.account_index)
+        p.testnet = Boolean(p.testnet)
       }
       if (p.exchange_id === 'alpaca') {
         if (typeof p.base_url === 'string') p.base_url = p.base_url.trim()
@@ -454,6 +508,8 @@ export default {
       const cryptoIds = this.cryptoExchangeList.map(e => e.id)
       if (cryptoIds.includes(val)) {
         this.addExchangeType = 'crypto'
+      } else if (val === 'lighter') {
+        this.addExchangeType = 'lighter'
       } else if (val === 'alpaca') {
         this.addExchangeType = 'alpaca'
       } else if (val === 'ibkr') {

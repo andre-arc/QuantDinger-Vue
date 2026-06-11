@@ -11,6 +11,7 @@ export const CRYPTO_EXCHANGE_DISPLAY_NAMES = {
   bitfinex: 'Bitfinex',
   deepcoin: 'Deepcoin',
   htx: 'HTX',
+  lighter: 'Lighter DEX',
   alpaca: 'Alpaca',
   ibkr: 'IBKR',
   mt5: 'MetaTrader 5'
