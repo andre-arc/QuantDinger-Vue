@@ -132,30 +132,42 @@
           type="info"
           showIcon
           style="margin-bottom: 16px"
-          message="Lighter DEX — EVM Wallet Authentication"
-          description="Lighter is a zk-rollup on-chain order book. Authentication uses your EVM wallet private key (ECDSA), not an API key."
+          message="Lighter DEX — API Key Authentication"
+          description="Lighter uses API keys (not your main wallet). Go to app.zklighter.com → API Keys → Create API Key. You will receive a private key and a public key."
         />
-        <a-form-item label="Wallet Private Key">
+        <a-form-item label="API Key Private Key">
           <a-input-password
-            v-decorator="['private_key', { rules: [{ required: true, message: 'Wallet private key is required' }] }]"
-            placeholder="0x... (64-char hex or 0x-prefixed)"
+            v-decorator="['private_key', { rules: [{ required: true, message: 'API key private key is required' }] }]"
+            placeholder="hex string (from Lighter API Keys page)"
             autocomplete="new-password"
           />
           <div class="field-hint">
             <a-icon type="info-circle" />
-            <span>Your EVM wallet private key. Never share this with anyone.</span>
+            <span>The private key shown when you created your API key on app.zklighter.com → API Keys. Not your main wallet key.</span>
           </div>
         </a-form-item>
-        <a-form-item label="Account Index (optional)">
+        <a-form-item label="Account Index">
           <a-input-number
             v-decorator="['account_index', { initialValue: 1 }]"
             :min="1"
+            :max="9007199254740991"
+            style="width: 100%"
+          />
+          <div class="field-hint">
+            <a-icon type="info-circle" />
+            <span>The "account index" shown on Lighter API Keys page (e.g. 281474976710626). Not the API key index.</span>
+          </div>
+        </a-form-item>
+        <a-form-item label="API Key Index">
+          <a-input-number
+            v-decorator="['api_key_index', { initialValue: 255 }]"
+            :min="0"
             :max="254"
             style="width: 100%"
           />
           <div class="field-hint">
             <a-icon type="info-circle" />
-            <span>Lighter sub-key index. Leave at 1 for the primary account; use 2–254 for API sub-keys.</span>
+            <span>The "API key index" shown on Lighter API Keys page (e.g. 4). Leave at 255 only if using a master key.</span>
           </div>
         </a-form-item>
         <a-form-item label="Use Testnet">
@@ -402,7 +414,7 @@ export default {
         f.push('api_key', 'secret_key')
         if (this.addExchangeNeedsPassphrase) f.push('passphrase')
       } else if (this.addExchangeType === 'lighter') {
-        f.push('private_key', 'account_index', 'testnet')
+        f.push('private_key', 'account_index', 'api_key_index', 'testnet')
       } else if (this.addExchangeType === 'alpaca') {
         f.push('api_key', 'secret_key', 'base_url')
       } else if (this.addExchangeType === 'ibkr') {
@@ -419,7 +431,7 @@ export default {
         return f
       }
       if (this.addExchangeType === 'lighter') {
-        return ['exchange_id', 'private_key', 'account_index', 'testnet']
+        return ['exchange_id', 'private_key', 'account_index', 'api_key_index', 'testnet']
       }
       if (this.addExchangeType === 'alpaca') {
         return ['exchange_id', 'api_key', 'secret_key', 'base_url']
@@ -443,6 +455,7 @@ export default {
       if (p.exchange_id === 'lighter') {
         if (typeof p.private_key === 'string') p.private_key = p.private_key.trim()
         if (p.account_index != null) p.account_index = Number(p.account_index)
+        if (p.api_key_index != null) p.api_key_index = Number(p.api_key_index)
         p.testnet = Boolean(p.testnet)
       }
       if (p.exchange_id === 'alpaca') {
